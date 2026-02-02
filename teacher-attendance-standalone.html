@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher - Attendance System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .hint {
+            color: #888;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .student-list {
+            margin-top: 20px;
+        }
+
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .session-setup {
+            background: #f5f5f5;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .qr-display {
+            display: none;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .qr-display.active {
+            display: block;
+        }
+
+        #qrcode {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .pin-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .pin-label {
+            font-size: 18px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .pin-code {
+            font-size: 72px;
+            font-weight: bold;
+            letter-spacing: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .session-url {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .live-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .attendance-live-list {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .attendance-live-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .attendance-live-item.absent {
+            opacity: 0.5;
+            border-left-color: #f44336;
+        }
+
+        .check-in-time {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-present {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-absent {
+            background: #f44336;
+            color: white;
+        }
+
+        .record-list {
+            margin-top: 20px;
+        }
+
+        .record-item {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .record-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .record-date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .record-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border-left: 4px solid #388e3c;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👨‍🏫 Teacher Attendance System</h1>
+        <p class="subtitle">Manage students and track attendance with QR codes</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('students')">Manage Students</button>
+            <button class="tab" onclick="switchTab('session')">Live Session</button>
+            <button class="tab" onclick="switchTab('records')">View Records</button>
+        </div>
+
+        <!-- Manage Students Tab -->
+        <div id="students" class="tab-content active">
+            <div class="input-group">
+                <label for="studentInput">Add Students:</label>
+                <textarea 
+                    id="studentInput" 
+                    placeholder="Enter student names (one per line):&#10;John Smith&#10;Sarah Johnson&#10;Mike Brown"
+                ></textarea>
+                <div class="hint">Enter one student name per line</div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="addStudents()">Add Students</button>
+                <button class="btn-danger" onclick="clearStudents()">Clear All Students</button>
+            </div>
+
+            <div class="student-list" id="studentList"></div>
+        </div>
+
+        <!-- Live Session Tab -->
+        <div id="session" class="tab-content">
+            <div id="sessionSetup" class="session-setup">
+                <div class="input-group">
+                    <label for="lectureTitle">Lecture Title:</label>
+                    <input type="text" id="lectureTitle" placeholder="e.g., Introduction to Programming - Week 5">
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn-success" onclick="startSession()">🚀 Start Attendance Session</button>
+                </div>
+            </div>
+
+            <div id="qrDisplay" class="qr-display">
+                <h2 style="margin-bottom: 20px; color: #333;">
+                    <span class="live-indicator"></span>Live Attendance Session
+                </h2>
+                
+                <div class="alert alert-info">
+                    <strong>Instructions for Students:</strong><br>
+                    Scan the QR code below OR enter the PIN code to mark yourself present
+                </div>
+
+                <div id="qrcode"></div>
+                
+                <div class="pin-display">
+                    <div class="pin-label">Backup PIN Code:</div>
+                    <div class="pin-code" id="pinDisplay">----</div>
+                </div>
+
+                <div class="session-url">
+                    <strong>Student Check-in URL:</strong><br>
+                    <span id="sessionUrl"></span>
+                </div>
+
+                <div class="live-stats">
+                    <div class="stat-card success">
+                        <div class="stat-label">Present</div>
+                        <div class="stat-value" id="presentCount">0</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-label">Absent</div>
+                        <div class="stat-value" id="absentCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total</div>
+                        <div class="stat-value" id="totalCount">0</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: #333;">Live Check-ins:</h3>
+                <div class="attendance-live-list" id="liveAttendanceList"></div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn-success" onclick="endSession()">✅ End Session & Save</button>
+                    <button class="btn-danger" onclick="cancelSession()">❌ Cancel Session</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Records Tab -->
+        <div id="records" class="tab-content">
+            <h2 style="margin-bottom: 20px; color: #333;">Attendance History</h2>
+            <div class="button-group" style="margin-bottom: 20px;">
+                <button class="btn-danger" onclick="clearAllRecords()">Clear All Records</button>
+            </div>
+            <div class="record-list" id="recordList"></div>
+        </div>
+    </div>
+
+    <script>
+        let students = [];
+        let attendanceRecords = [];
+        let currentSession = null;
+        let sessionCheckInterval = null;
+
+        // Generate random 4-digit PIN
+        function generatePIN() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        // Generate unique session ID
+        function generateSessionID() {
+            return 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Load data on startup
+        function loadData() {
+            try {
+                const studentsData = localStorage.getItem('students');
+                if (studentsData) {
+                    students = JSON.parse(studentsData);
+                }
+
+                const recordsData = localStorage.getItem('attendance-records');
+                if (recordsData) {
+                    attendanceRecords = JSON.parse(recordsData);
+                }
+            } catch (error) {
+                console.log('No existing data found, starting fresh');
+                students = [];
+                attendanceRecords = [];
+            }
+
+            updateStudentList();
+            updateRecordsList();
+        }
+
+        function saveStudentsToStorage() {
+            localStorage.setItem('students', JSON.stringify(students));
+        }
+
+        function saveRecordsToStorage() {
+            localStorage.setItem('attendance-records', JSON.stringify(attendanceRecords));
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'records') {
+                updateRecordsList();
+            }
+        }
+
+        function addStudents() {
+            const input = document.getElementById('studentInput').value.trim();
+            if (!input) {
+                alert('Please enter at least one student name!');
+                return;
+            }
+
+            const newStudents = input.split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0)
+                .filter(name => !students.includes(name));
+
+            if (newStudents.length === 0) {
+                alert('No new students to add (duplicates ignored).');
+                return;
+            }
+
+            students.push(...newStudents);
+            saveStudentsToStorage();
+            updateStudentList();
+            document.getElementById('studentInput').value = '';
+            alert(`Added ${newStudents.length} student(s)!`);
+        }
+
+        function removeStudent(studentName) {
+            if (confirm(`Remove ${studentName} from the list?`)) {
+                students = students.filter(s => s !== studentName);
+                saveStudentsToStorage();
+                updateStudentList();
+            }
+        }
+
+        function clearStudents() {
+            if (confirm('Clear all students? This will NOT delete attendance records.')) {
+                students = [];
+                saveStudentsToStorage();
+                updateStudentList();
+            }
+        }
+
+        function updateStudentList() {
+            const listDiv = document.getElementById('studentList');
+            
+            if (students.length === 0) {
+                listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>No students added yet.<br>Add students using the form above.</p></div>';
+                return;
+            }
+
+            listDiv.innerHTML = `<h3 style="margin: 20px 0 10px 0; color: #333;">Student List (${students.length})</h3>` +
+                students.map(student => `
+                    <div class="student-item">
+                        <span>${student}</span>
+                        <button class="btn-danger btn-small" onclick="removeStudent('${student.replace(/'/g, "\\'")}')">Remove</button>
+                    </div>
+                `).join('');
+        }
+
+        function startSession() {
+            const title = document.getElementById('lectureTitle').value.trim();
+            
+            if (!title) {
+                alert('Please enter a lecture title!');
+                return;
+            }
+
+            if (students.length === 0) {
+                alert('Please add students first!');
+                return;
+            }
+
+            const sessionID = generateSessionID();
+            const pin = generatePIN();
+            const date = new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            currentSession = {
+                id: sessionID,
+                title: title,
+                date: date,
+                pin: pin,
+                startTime: Date.now(),
+                attendance: {}
+            };
+
+            // Initialize all students as absent
+            students.forEach(student => {
+                currentSession.attendance[student] = {
+                    present: false,
+                    checkInTime: null
+                };
+            });
+
+            // Save session to localStorage
+            localStorage.setItem(sessionID, JSON.stringify(currentSession));
+
+            // Generate QR code
+            document.getElementById('qrcode').innerHTML = '';
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+            const studentUrl = baseUrl + 'student-checkin-standalone.html?session=' + sessionID;
+            
+            new QRCode(document.getElementById('qrcode'), {
+                text: studentUrl,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+            });
+
+            document.getElementById('pinDisplay').textContent = pin;
+            document.getElementById('sessionUrl').textContent = studentUrl;
+            
+            document.getElementById('sessionSetup').style.display = 'none';
+            document.getElementById('qrDisplay').classList.add('active');
+
+            updateLiveAttendance();
+            
+            // Start checking for updates every 2 seconds
+            sessionCheckInterval = setInterval(checkSessionUpdates, 2000);
+        }
+
+        function checkSessionUpdates() {
+            if (!currentSession) return;
+
+            try {
+                const sessionData = localStorage.getItem(currentSession.id);
+                if (sessionData) {
+                    const updatedSession = JSON.parse(sessionData);
+                    currentSession.attendance = updatedSession.attendance;
+                    updateLiveAttendance();
+                }
+            } catch (error) {
+                console.log('Error checking session updates:', error);
+            }
+        }
+
+        function updateLiveAttendance() {
+            if (!currentSession) return;
+
+            const presentStudents = Object.entries(currentSession.attendance)
+                .filter(([_, data]) => data.present);
+            const absentStudents = Object.entries(currentSession.attendance)
+                .filter(([_, data]) => !data.present);
+
+            document.getElementById('presentCount').textContent = presentStudents.length;
+            document.getElementById('absentCount').textContent = absentStudents.length;
+            document.getElementById('totalCount').textContent = students.length;
+
+            const listDiv = document.getElementById('liveAttendanceList');
+            
+            const allStudents = [...presentStudents, ...absentStudents];
+            
+            listDiv.innerHTML = allStudents.map(([name, data]) => {
+                const checkInTime = data.checkInTime ? 
+                    new Date(data.checkInTime).toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    }) : '';
+                
+                return `
+                    <div class="attendance-live-item ${data.present ? '' : 'absent'}">
+                        <div>
+                            <strong>${name}</strong>
+                            ${checkInTime ? `<div class="check-in-time">Checked in at ${checkInTime}</div>` : ''}
+                        </div>
+                        <span class="status-badge ${data.present ? 'status-present' : 'status-absent'}">
+                            ${data.present ? '✓ Present' : 'Absent'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function endSession() {
+            if (!currentSession) return;
+
+            if (!confirm('End this session and save attendance?')) return;
+
+            clearInterval(sessionCheckInterval);
+
+            const presentCount = Object.values(currentSession.attendance)
+                .filter(data => data.present).length;
+            
+            const record = {
+                id: Date.now(),
+                title: currentSession.title,
+                date: currentSession.date,
+                attendance: currentSession.attendance,
+                presentCount: presentCount,
+                absentCount: students.length - presentCount,
+                totalStudents: students.length
+            };
+
+            attendanceRecords.unshift(record);
+            saveRecordsToStorage();
+
+            // Clean up session from localStorage
+            localStorage.removeItem(currentSession.id);
+
+            alert(`Session ended!\nPresent: ${presentCount}\nAbsent: ${students.length - presentCount}`);
+            
+            resetSession();
+        }
+
+        function cancelSession() {
+            if (!currentSession) return;
+
+            if (!confirm('Cancel this session? Attendance will NOT be saved.')) return;
+
+            clearInterval(sessionCheckInterval);
+            localStorage.removeItem(currentSession.id);
+
+            resetSession();
+        }
+
+        function resetSession() {
+            currentSession = null;
+            document.getElementById('lectureTitle').value = '';
+            document.getElementById('sessionSetup').style.display = 'block';
+            document.getElementById('qrDisplay').classList.remove('active');
+        }
+
+        function updateRecordsList() {
+            const listDiv = document.getElementById('recordList');
+
+            if (attendanceRecords.length === 0) {
+                listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>No attendance records yet.<br>Start a live session to track attendance.</p></div>';
+                return;
+            }
+
+            listDiv.innerHTML = attendanceRecords.map(record => {
+                const presentStudents = Object.entries(record.attendance)
+                    .filter(([_, data]) => data.present)
+                    .map(([name, _]) => name);
+                const absentStudents = Object.entries(record.attendance)
+                    .filter(([_, data]) => !data.present)
+                    .map(([name, _]) => name);
+
+                return `
+                    <div class="record-item">
+                        <div class="record-header">
+                            <div>
+                                <div class="record-title">${record.title}</div>
+                                <div class="record-date">${record.date}</div>
+                            </div>
+                            <button class="btn-danger btn-small" onclick="deleteRecord(${record.id})">Delete</button>
+                        </div>
+                        <div class="record-stats">
+                            <div>
+                                <span style="color: #666;">Total:</span>
+                                <strong>${record.totalStudents}</strong>
+                            </div>
+                            <div>
+                                <span style="color: #4CAF50;">Present:</span>
+                                <strong style="color: #4CAF50;">${record.presentCount}</strong>
+                            </div>
+                            <div>
+                                <span style="color: #f44336;">Absent:</span>
+                                <strong style="color: #f44336;">${record.absentCount}</strong>
+                            </div>
+                        </div>
+                        ${presentStudents.length > 0 ? `
+                            <div style="margin-top: 10px; font-size: 14px; color: #666;">
+                                <strong>Present:</strong> ${presentStudents.join(', ')}
+                            </div>
+                        ` : ''}
+                        ${absentStudents.length > 0 ? `
+                            <div style="margin-top: 5px; font-size: 14px; color: #666;">
+                                <strong>Absent:</strong> ${absentStudents.join(', ')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteRecord(recordId) {
+            if (confirm('Delete this attendance record?')) {
+                attendanceRecords = attendanceRecords.filter(r => r.id !== recordId);
+                saveRecordsToStorage();
+                updateRecordsList();
+            }
+        }
+
+        function clearAllRecords() {
+            if (confirm('Clear all attendance records? This cannot be undone.')) {
+                attendanceRecords = [];
+                saveRecordsToStorage();
+                updateRecordsList();
+            }
+        }
+
+        // Initialize app
+        loadData();
+    </script>
+</body>
+</html>
